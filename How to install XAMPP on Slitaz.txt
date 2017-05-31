@@ -1,0 +1,93 @@
+
+// Installation
+I am using SliTaz 3.0, i download [xampp-linux-1.7.7.tar.gz] in my computer, but can not use [tar xvfc xampp-1.7.7.tar.gz -C /opt] this command to unpack to path /opt also can not use install command [ /opt/lampp lampp start], can anyone help me?
+Thank you
+Posted 5 years ago #
+
+arsaber
+offline
+Member
+
+It might be a permission problem. You need to be root to untar something in /opt
+Posted 5 years ago #
+
+mojo
+offline
+Key Master
+
+Login as root
+root@slitaz:~# mkdir /opt
+root@slitaz:~# tar xvfz xampp-1.7.7.tar.gz -C /opt
+root@slitaz:~# tazpkg -gi bash
+Do you want Bash for /bin/sh (yes/No) ? :
+Leaving /bin/sh to : /bin/busybox
+root@slitaz:~# tazpkg -gi linux-ipv6
+root@slitaz:~# tazhw detect-pci
+root@slitaz:~# export PATH=$PATH:/opt/lampp
+root@slitaz:~# lampp start
+Starting XAMPP for Linux 1.7.7...
+XAMPP: Starting Apache with SSL (and PHP5)...
+XAMPP: Starting MySQL...
+XAMPP: Starting ProFTPD...
+XAMPP for Linux started.
+
+
+//Quick tip for people who want to use XAMPP for Linux on Slitaz
+
+A tip for those who want to install XAMPP for Linux on Slitaz - I'm using 1.7.1 as it has PHP 5.2.x (which I need for some apps) - slitaz has its own httpd running on port 82, which results in XAMPP not starting Apache saying that another web server is already running.
+
+So to start XAMPP for Linux you will have to kill that background process:
+
+$ ps aux | grep httpd
+
+1765 httpd ...
+2736 httpd ...
+283  grep httpd
+
+$ kill -9 1765 2736
+
+Then you can start XAMPP and it won't complain that "Another web server is already running"
+
+Now, if you need the TazPanel running again, it wont start by merely clicking on the menu item.
+You have to enter the following command (because you kill'ed it)
+$ httpd -p 82 -u root -c /etc/slitaz/httpd.conf -r TazPanel Authentication - Default: root:root
+
+Both commands above need to be run as root
+
+If you want to use "sudo", you have to install sudo from TazPanel
+and then add your username to the /etc/sudoers file like this:
+username ALL=(ALL) ALL
+just below
+root ALL=(ALL) ALL
+
+If you dont have or dont want to use sudo, you simply have to type "su" and then the root password that you gave during install, and then, you become root.
+Then you enter the commands and they work.
+
+Hope that helps,
+sleekaz
+Posted 4 years ago #
+
+mojo
+offline
+Key Master
+
+Busybox httpd listening on port 80 is stopping XAMPP apache from starting.
+# /etc/init.d/httpd stop
+Tazpanel which runs on busybox httpd port 82 is not the issue.
+Busybox httpd running on port 80 can be stopped from auto-starting on boot by editing /etc/rcS.conf, remove httpd from RUN_DAEMONS=
+The reason httpd on port 80 is auto-started is so Applications/Development/CGI SHell Environment, tazwiki and other default installed programs requiring a web server work.
+http://localhost/cgi-bin/cgi-env.sh
+
+To restart tazpanel if you choose to kill all instances of httpd:
+# tazpanel start
+Posted 4 years ago #
+
+sleekaz
+offline
+Member
+
+Thanks for the prompt clarification. I was wondering why port 82 being specified was still blocking XAMPP's Apache on port 80. Now it is clarified.
+
+Thanks,
+sleekaz.
+Posted 4 years ago #
